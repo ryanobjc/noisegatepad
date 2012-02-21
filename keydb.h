@@ -8,7 +8,7 @@
 
 
 
-// Load the DB from the specified file. Returns 0 on success, < 0 on error.
+// Load the DB from the specified file. Returns number of entires on success, < 0 on error.
 // Possible errors:
 // - cant open file
 // - cant read file/file empty
@@ -17,8 +17,9 @@
 int reload_db_from_file(const char *);
 
 // Check a code against DB. Returns:
-// - 0 if code is GOOD
-// - -1 if code is BAD
+// - 1 if code is GOOD
+// - 0 if code is BAD
+// Also logs
 int check_code(const char *);
 
 

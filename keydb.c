@@ -21,7 +21,7 @@ typedef struct value_struct {
 
 int part_count(gchar **v) {
   int c = 0;
-  while(v++ != NULL) {
+  while(*v++ != NULL) {
     c++;
   }
   return c;
@@ -35,7 +35,7 @@ time_t parse_time(const gchar *s) {
   gchar * end;
   time_t r = strtol(s, &end, 10);
 
-  if (*end == '\0') return r;
+  if (*end == '\0' || *end == '\n') return r;
   return -1;
 }
 
@@ -71,11 +71,11 @@ int reload_db_from_file(const char * fname) {
 
       // ignore all-comment lines and empty lines.
       if (readbuf[0] == '#' || readbuf[0] == '\n') continue;
-      gchar **parts = g_strsplit(readbuf, ",", 3);
+      gchar **parts = g_strsplit(readbuf, ",", 4);
 
       // check to see how many parts:
       if (part_count(parts) != 4) {
-	g_warning("Line %d didn't have 4 parts", cnt);
+	g_warning("Line %d didn't have 4 parts, %d", cnt, part_count(parts));
 	continue;
       }
 
@@ -87,14 +87,14 @@ int reload_db_from_file(const char * fname) {
 
       if (strlen(parts[0]) > MAX_DIGITS ||
 	  strlen(parts[0]) < MIN_DIGITS) {
-	g_warning("Line %d, code was wrong length: %ld",
-		  cnt, strlen(parts[0]));
+	//g_warning("Line %d, code was wrong length: %ld",
+	//	  cnt, strlen(parts[0]));
 	failed = 1;
       }
 
       if (!is_str_digits(parts[0])) {
-	g_warning("Line %d, code was not all digits: \"%s\"",
-		  cnt, parts[0]);
+	//g_warning("Line %d, code was not all digits: \"%s\"",
+	//	  cnt, parts[0]);
 	failed = 1;
       }
 
@@ -109,17 +109,18 @@ int reload_db_from_file(const char * fname) {
 	failed = 1;
       }
 
-      if (disabled != 0 || disabled != 1) {
-	g_warning("Line %d, disabled field wasnt 0 or 1: %s",
-		  cnt, parts[3]);
+      //if (disabled != 0 || disabled != 1) {
+      if (  ! (disabled == 0 || disabled == 1)) {
+	g_warning("Line %d, disabled field wasnt 0 or 1: %s, %d",
+		  cnt, parts[3], disabled);
 	failed = 1;
       }
 
       if (failed) continue;
 
       if (disabled) {
-	g_message("Line %d ignoring disabled code",
-		  cnt);
+	g_message("Line %d: ignoring disabled code %s",
+		  cnt, parts[0]);
 	continue;
       }
 
@@ -131,8 +132,8 @@ int reload_db_from_file(const char * fname) {
 
       g_hash_table_insert(new_table, code, val);
 
-      g_message("Line %d: Added code %s, validity range %ld -> %ld",
-		cnt, code, start_valid, end_valid);
+      //g_message("Line %d: Added code %s, validity range %ld -> %ld",
+      //		cnt, code, start_valid, end_valid);
 
     } else {
       g_warning("Unable to fgets line (%d): %s", cnt, strerror(errno));
